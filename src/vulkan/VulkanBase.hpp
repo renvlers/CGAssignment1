@@ -4,6 +4,8 @@
 #ifndef _VULKAN_BASE_HPP_
 #define _VULKAN_BASE_HPP_
 
+#include "../util/Result.hpp"
+#include <functional>
 #include <span>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -99,6 +101,23 @@ private:
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
 
     /**
+     * @name Callbacks for create swapchain, destroy swapchain, create logical device, and destroy logical device events
+     *
+     */
+    /// @{
+    std::vector<std::function<void()>> createSwapchainCallbacks;
+    std::vector<std::function<void()>> destroySwapchainCallbacks;
+    std::vector<std::function<void()>> createDeviceCallbacks;
+    std::vector<std::function<void()>> destroyDeviceCallbacks;
+    /// @}
+
+    /**
+     * @name Current image index for the swapchain, typically used in the rendering loop to acquire the next image and present it.
+     *
+     */
+    uint32_t currentImageIndex = 0;
+
+    /**
      * @brief Private constructors, assignment operators and destructor to prevent multiple instances of VulkanBase.
      */
     /// @{
@@ -118,13 +137,20 @@ private:
     /**
      * @brief Create Vulkan debug messenger.
      */
-    VkResult createDebugMessenger();
+    Result createDebugMessenger();
 
     /**
      * @brief Private method to create swapchain.
      *
      */
-    VkResult createSwapchainInternal();
+    Result createSwapchainInternal();
+
+    /**
+     * @brief Execute callbacks for swapchain creation or destruction.
+     *
+     * @param callbacks Vector of callback functions to execute.
+     */
+    static void executeCallbacks(const std::vector<std::function<void()>>& callbacks);
 
 public:
     /**
@@ -144,17 +170,17 @@ public:
     /**
      * @brief Set the Vulkan API to latest version supported by the system.
      *
-     * @return VK_SUCCESS if the API version was set successfully, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if the API version was set successfully, otherwise returns an appropriate Result error code.
      */
-    VkResult setApiVersionToLatest();
+    Result setApiVersionToLatest();
 
     /**
      * @brief Create Vulkan instance with the specified flags.
      *
      * @param flags Optional flags for instance creation.
-     * @return VK_SUCCESS if the instance was created successfully, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if the instance was created successfully, otherwise returns an appropriate Result error code.
      */
-    VkResult createInstance(VkInstanceCreateFlags flags = 0);
+    Result createInstance(VkInstanceCreateFlags flags = 0);
 
     /**
      * @brief Get the Vulkan instance.
@@ -230,26 +256,26 @@ public:
      * @brief Check if the specified instance layers are available.
      *
      * @param layersToCheck Span of layer names to check for availability.
-     * @return VK_SUCCESS if all layers are available, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if all layers are available, otherwise returns an appropriate Result error code.
      */
-    VkResult checkInstanceLayers(std::span<const char*> layersToCheck) const;
+    Result checkInstanceLayers(std::span<const char*> layersToCheck) const;
 
     /**
      * @brief Check if the specified instance extensions are available.
      *
      * @param extensionsToCheck Span of extension names to check for availability.
      * @param layerName Optional name of the layer to check for extensions, if nullptr checks for global extensions.
-     * @return VK_SUCCESS if all extensions are available, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if all extensions are available, otherwise returns an appropriate Result error code.
      */
-    VkResult checkInstanceExtensions(std::span<const char*> extensionsToCheck, const char* layerName = nullptr) const;
+    Result checkInstanceExtensions(std::span<const char*> extensionsToCheck, const char* layerName = nullptr) const;
 
     /**
      * @brief Check if the specified device extensions are available.
      *
      * @param extensionsToCheck Span of extension names to check for availability.
-     * @return VK_SUCCESS if all extensions are available, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if all extensions are available, otherwise returns an appropriate Result error code.
      */
-    VkResult checkDeviceExtensions(std::span<const char*> extensionsToCheck) const;
+    Result checkDeviceExtensions(std::span<const char*> extensionsToCheck) const;
 
     /**
      * @brief Get the current physical device.
@@ -290,9 +316,9 @@ public:
     /**
      * @brief Find all available physical devices
      *
-     * @return VK_SUCCESS if physical devices were found successfully, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if physical devices were found successfully, otherwise returns an appropriate Result error code.
      */
-    VkResult findAvailablePhysicalDevices();
+    Result findAvailablePhysicalDevices();
 
     /**
      * @brief Determine physical device to use based on the specified index and required queue support.
@@ -301,9 +327,9 @@ public:
      * @param enableGraphicsQueue Whether to require support for graphics operations.
      * @param enableComputeQueue Whether to require support for compute operations.
      *
-     * @return VK_SUCCESS if the queue family indices were found successfully, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if the queue family indices were found successfully, otherwise returns an appropriate Result error code.
      */
-    VkResult determinePhysicalDevice(uint32_t deviceIndex = 0, bool enableGraphicsQueue = true, bool enableComputeQueue = true);
+    Result determinePhysicalDevice(uint32_t deviceIndex = 0, bool enableGraphicsQueue = true, bool enableComputeQueue = true);
 
     /**
      * @brief Get the count of available physical devices.
@@ -317,9 +343,9 @@ public:
      *
      * @param flags Optional flags for device creation, default is 0.
      *
-     * @return VK_SUCCESS if the device was created successfully, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if the device was created successfully, otherwise returns an appropriate Result error code.
      */
-    VkResult createDevice(VkDeviceCreateFlags flags = 0);
+    Result createDevice(VkDeviceCreateFlags flags = 0);
 
     /**
      * @brief Get the logical device.
@@ -336,9 +362,9 @@ public:
      * @param enableCompute Whether to require support for compute operations.
      * @param queueFamilyIndices Output array to store the queue family indices for graphics, presentation, and compute operations.
      *
-     * @return VK_SUCCESS if the queue family indices were found successfully, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if the queue family indices were found successfully, otherwise returns an appropriate Result error code.
      */
-    VkResult getQueueFamilyIndices(VkPhysicalDevice physicalDevice, bool enableGraphics, bool enableCompute, uint32_t (&queueFamilyIndices)[3]);
+    Result getQueueFamilyIndices(VkPhysicalDevice physicalDevice, bool enableGraphics, bool enableCompute, uint32_t (&queueFamilyIndices)[3]);
 
     /**
      * @brief Get the queue family index.
@@ -446,13 +472,20 @@ public:
     const std::vector<VkSurfaceFormatKHR>& getAvailableSurfaceFormats() const;
 
     /**
+     * @brief Find available surface formats for the current physical device and surface.
+     *
+     * @return VK_SUCCESS if surface formats were found successfully, otherwise returns an appropriate Result error code.
+     */
+    Result findAvailableSurfaceFormats();
+
+    /**
      * @brief Set surface format.
      *
      * @param surfaceFormat Surface format to set for the swapchain.
      *
-     * @return VK_SUCCESS if the surface format was set successfully, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if the surface format was set successfully, otherwise returns an appropriate Result error code.
      */
-    VkResult setSurfaceFormat(const VkSurfaceFormatKHR& surfaceFormat);
+    Result setSurfaceFormat(const VkSurfaceFormatKHR& surfaceFormat);
 
     /**
      * @brief Create Vulkan swapchain.
@@ -460,16 +493,155 @@ public:
      * @param limitFrameRate Whether to limit the frame rate to the display's refresh rate.
      * @param flags Optional flags for swapchain creation, default is 0.
      *
-     * @return VK_SUCCESS if the swapchain was created successfully, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if the swapchain was created successfully, otherwise returns an appropriate Result error code.
      */
-    VkResult createSwapchain(bool limitFrameRate = true, VkSwapchainCreateFlagsKHR flags = 0);
+    Result createSwapchain(bool limitFrameRate = true, VkSwapchainCreateFlagsKHR flags = 0);
 
     /**
      * @brief Recreate the swapchain, typically called when the window is resized or the surface becomes incompatible.
      *
-     * @return VK_SUCCESS if the swapchain was recreated successfully, otherwise returns an appropriate VkResult error code.
+     * @return VK_SUCCESS if the swapchain was recreated successfully, otherwise returns an appropriate Result error code.
      */
-    VkResult recreateSwapchain();
+    Result recreateSwapchain();
+
+    /**
+     * @brief Add a callback function to be called when the swapchain is created.
+     *
+     * @param callback Callback function to add.
+     */
+    void addCreateSwapchainCallback(std::function<void()> callback);
+
+    /**
+     * @brief Add a callback function to be called when the swapchain is destroyed.
+     *
+     * @param callback Callback function to add.
+     */
+    void addDestroySwapchainCallback(std::function<void()> callback);
+
+    /**
+     * @brief Add a callback function to be called when the logical device is created.
+     *
+     * @param callback Callback function to add.
+     */
+    void addCreateDeviceCallback(std::function<void()> callback);
+
+    /**
+     * @brief Add a callback function to be called when the logical device is destroyed.
+     *
+     * @param callback Callback function to add.
+     */
+    void addDestroyDeviceCallback(std::function<void()> callback);
+
+    /**
+     * @brief Wait for the device to become idle, typically called before cleanup or when the application is about to exit.
+     *
+     * @return VK_SUCCESS if the device became idle successfully, otherwise returns an appropriate Result error code.
+     */
+    Result waitForDeviceIdle() const;
+
+    /**
+     * @brief Recreate device, typically called when the physical device is changed or when the device needs to be recreated for any reason.
+     *
+     * @param flags Optional flags for device creation, default is 0.
+     *
+     * @return VK_SUCCESS if the device was recreated successfully, otherwise returns an appropriate Result error code.
+     */
+    Result recreateDevice(VkDeviceCreateFlags flags = 0);
+
+    /**
+     * @brief Terminate the VulkanBase instance and clean up all Vulkan resources.
+     *
+     */
+    void terminate();
+
+    /**
+     * @brief Get the current image index for the swapchain, typically used in the rendering loop to acquire the next image and present it.
+     *
+     */
+    uint32_t getCurrentImageIndex() const;
+
+    /**
+     * @brief Swap images in the swapchain, typically called at the end of the rendering loop to present the rendered image to the screen.
+     *
+     * @param imageAvailableSemaphore Semaphore to signal when the image is available for presentation, typically the same semaphore used in vkAcquireNextImageKHR.
+     *
+     * @return VK_SUCCESS if the image was swapped successfully, otherwise returns an appropriate Result error code.
+     */
+    Result swapImage(VkSemaphore imageAvailableSemaphore);
+
+    /**
+     * @brief Submit command buffer to the graphics queue, typically called in the rendering loop to submit recorded command buffers for execution.
+     *
+     * @param submitInfo Reference to the VkSubmitInfo structure containing the command buffer submission information.
+     * @param fence Optional fence to signal when the command buffer execution is complete, default is VK_NULL_HANDLE.
+     *
+     * @return VK_SUCCESS if the command buffer was submitted successfully, otherwise returns an appropriate Result error code.
+     */
+    Result submitCommandBufferToGraphicsQueue(VkSubmitInfo& submitInfo, VkFence fence = VK_NULL_HANDLE) const;
+
+    /**
+     * @brief Submit command buffer to the graphics queue with semaphores for synchronization, typically called in the rendering loop to submit recorded command buffers for execution while synchronizing with image availability and render completion.
+     *
+     * @param commandBuffer Command buffer to submit for execution.
+     * @param imageAvailableSemaphore Semaphore to wait on
+     * @param renderFinishedSemaphore Semaphore to signal when rendering is complete.
+     * @param fence Optional fence to signal when the command buffer execution is complete, default is VK_NULL_HANDLE.
+     * @param waitDstStageImageAvailable Pipeline stage at which the imageAvailableSemaphore should be waited on, default is VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT.
+     *
+     * @return VK_SUCCESS if the command buffer was submitted successfully, otherwise returns an appropriate Result error code.
+     */
+    Result submitCommandBufferToGraphicsQueue(VkCommandBuffer commandBuffer, VkSemaphore imageAvailableSemaphore, VkSemaphore renderFinishedSemaphore, VkFence fence = VK_NULL_HANDLE,
+                                              VkPipelineStageFlags waitDstStageImageAvailable = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT) const;
+
+    /**
+     * @brief Submit command buffer to the graphics queue with fence for synchronization, typically called in the rendering loop to submit recorded command buffers for execution while synchronizing with a fence to ensure that the next frame is not rendered
+     * until the current frame is presented.
+     *
+     * @param commandBuffer Command buffer to submit for execution.
+     * @param fence Optional fence to signal when the command buffer execution is complete, default is VK_NULL_HANDLE.
+     *
+     * @return VK_SUCCESS if the command buffer was submitted successfully, otherwise returns an appropriate Result error code.
+     */
+    Result submitCommandBufferToGraphicsQueue(VkCommandBuffer commandBuffer, VkFence fence = VK_NULL_HANDLE) const;
+
+    /**
+     * @brief Submit command buffer to the compute queue, typically called in the rendering loop to submit recorded command buffers for execution on the compute queue.
+     *
+     * @param submitInfo Reference to the VkSubmitInfo structure containing the command buffer submission information.
+     * @param fence Optional fence to signal when the command buffer execution is complete, default is VK_NULL_HANDLE.
+     *
+     * @return VK_SUCCESS if the command buffer was submitted successfully, otherwise returns an appropriate Result error code.
+     */
+    Result submitCommandBufferToComputeQueue(VkSubmitInfo& submitInfo, VkFence fence = VK_NULL_HANDLE) const;
+
+    /**
+     * @brief Submit command buffer to the compute queue with fence for synchronization, typically called in the rendering loop to submit recorded command buffers for execution on the compute queue while synchronizing with a fence to ensure that the next
+     * frame is not rendered until the current frame is presented.
+     *
+     * @param commandBuffer Command buffer to submit for execution.
+     * @param fence Optional fence to signal when the command buffer execution is complete, default is VK_NULL_HANDLE.
+     *
+     * @return VK_SUCCESS if the command buffer was submitted successfully, otherwise returns an appropriate Result error code.
+     */
+    Result submitCommandBufferToComputeQueue(VkCommandBuffer commandBuffer, VkFence fence = VK_NULL_HANDLE) const;
+
+    /**
+     * @brief Present image to the presentation queue, typically called at the end of the rendering loop to present the rendered image to the screen after submitting command buffers for execution.
+     *
+     * @param presentInfo Reference to the VkPresentInfoKHR structure containing the presentation information.
+     *
+     * @return VK_SUCCESS if the image was presented successfully, otherwise returns an appropriate Result error code.
+     */
+    Result presentImage(VkPresentInfoKHR& presentInfo);
+
+    /**
+     * @brief Present image to the presentation queue with semaphores for synchronization, typically called at the end of the rendering loop to present the rendered image to the screen while synchronizing with render completion.
+     *
+     * @param renderFinishedSemaphore Semaphore to wait on before presenting the image, typically the same semaphore used in vkQueueSubmit for signaling render completion.
+     *
+     * @return VK_SUCCESS if the image was presented successfully, otherwise returns an appropriate Result error code.
+     */
+    Result presentImage(VkSemaphore renderFinishedSemaphore);
 };
 
 #endif // _VULKAN_BASE_HPP_

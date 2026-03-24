@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/fwd.hpp"
 #ifndef _POLYNOMIAL_DRAWER_HPP_
 #define _POLYNOMIAL_DRAWER_HPP_
 
@@ -21,14 +22,9 @@ private:
      * @name The minimum and maximum x-values for the drawing area
      */
     /// @{
-    glm::float64_t xMin;
-    glm::float64_t xMax;
+    glm::int32_t xMin;
+    glm::int32_t xMax;
     /// @}
-
-    /**
-     * @name The step size for drawing the polynomial.
-     */
-    glm::float64_t delta;
 
 public:
     /**
@@ -37,11 +33,10 @@ public:
      * @param polynomial The polynomial to be drawn
      * @param xMin The minimum x-value for the drawing area
      * @param xMax The maximum x-value for the drawing area
-     * @param delta The step size for drawing the polynomial
      *
      * @note The constructor takes ownership of the polynomial object using move semantics to optimize performance.
      */
-    PolynomialDrawer(Polynomial&& polynomial, glm::float64_t xMin, glm::float64_t xMax, glm::float64_t delta);
+    PolynomialDrawer(Polynomial&& polynomial, glm::int32_t xMin, glm::int32_t xMax);
 
     /**
      * @brief Draws the polynomial on the graphical interface.
@@ -56,27 +51,24 @@ public:
      * @param polynomial The polynomial to be drawn
      * @param xMin The minimum x-value for the drawing area
      * @param xMax The maximum x-value for the drawing area
-     * @param delta The step size for drawing the polynomial
      *
      * @note Polynomial is set using move semantics to optimize performance when updating the polynomial to be drawn.
      */
     /// @{
     void setPolynomial(Polynomial&& polynomial);
-    void setXMin(glm::float64_t xMin);
-    void setXMax(glm::float64_t xMax);
-    void setDelta(glm::float64_t delta);
+    void setXMin(glm::int32_t xMin);
+    void setXMax(glm::int32_t xMax);
     /// @}
 
     /**
      * @brief Getters of the polynomial drawing parameters.
      *
-     * @return The current polynomial, xMin, xMax, or delta used for drawing the polynomial.
+     * @return The current polynomial, xMin or xMax for drawing the polynomial.
      */
     /// @{
     const Polynomial& getPolynomial() const;
-    glm::float64_t getXMin() const;
-    glm::float64_t getXMax() const;
-    glm::float64_t getDelta() const;
+    glm::int32_t getXMin() const;
+    glm::int32_t getXMax() const;
     /// @}
 };
 

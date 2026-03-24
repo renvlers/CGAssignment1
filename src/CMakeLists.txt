@@ -5,6 +5,13 @@ add_executable(
     polynomial/PolynomialDrawer.cpp
     window/Window.cpp
     vulkan/VulkanBase.cpp
+    vulkan/Fence.cpp
+    vulkan/Semaphore.cpp
+    vulkan/CommandBuffer.cpp
+    vulkan/CommandPool.cpp
+    vulkan/RenderPass.cpp
+    vulkan/FrameBuffer.cpp
+    util/Result.cpp
 )
 
 target_link_libraries(

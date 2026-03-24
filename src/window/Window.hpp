@@ -4,7 +4,6 @@
 #define _WINDOW_HPP_
 
 #include <GLFW/glfw3.h>
-#include <functional>
 
 /**
  * @class Window
@@ -20,16 +19,25 @@ private:
     /**
      * @name Properties of the window such as width, height, and title
      */
+    /// @{
     uint32_t width;
     uint32_t height;
     const char* title;
     bool resizable;
+    bool limitFrameRate;
+    /// @}
 
 public:
     /**
+     * @name Default window size
+     *
+     */
+    static constexpr VkExtent2D DEFAULT_WINDOW_SIZE{1280, 720};
+
+    /**
      * @brief Constructor to initialize the window.
      */
-    Window(uint32_t width, uint32_t height, const char* title, bool resizable = true);
+    Window(uint32_t width, uint32_t height, const char* title, bool resizable = true, bool limitFrameRate = false);
 
     /**
      * @brief Destructor to clean up resources.
@@ -39,7 +47,7 @@ public:
     /**
      * @brief Show the window and start the main loop.
      */
-    void show(std::function<void()> renderCallback);
+    void show();
 
     /**
      * @brief Check if the window should close.
