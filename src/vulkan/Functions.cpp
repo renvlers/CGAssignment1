@@ -14,8 +14,8 @@ void createLayout() {
 }
 
 void createPipeline() {
-    static ShaderModule vert("../shader/build/VertShader.vert.spv");
-    static ShaderModule frag("../shader/build/FragShader.frag.spv");
+    static ShaderModule vert("shader/VertShader.vert.spv");
+    static ShaderModule frag("shader/FragShader.frag.spv");
     static VkPipelineShaderStageCreateInfo shaderStages[] = {
         vert.stageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT),
         frag.stageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT),

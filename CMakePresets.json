@@ -6,7 +6,7 @@
             "displayName": "Ninja Multi-Config",
             "description": "Use Ninja as default generator for multi-configuration builds",
             "generator": "Ninja Multi-Config",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }

@@ -45,14 +45,14 @@ set(SHADER_SOURCES
     "shader/FragShader.frag"
 )
 
-set(SPV_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/shader/build")
+# 临时编译输出目录（依然在 build 根目录下）
+set(SPV_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/shader")
 file(MAKE_DIRECTORY ${SPV_OUTPUT_DIR})
 
 set(SPV_OUTPUTS "")
 
 foreach(SHADER IN LISTS SHADER_SOURCES)
     get_filename_component(FILE_NAME ${SHADER} NAME)
-
     set(SPV_FILE "${SPV_OUTPUT_DIR}/${FILE_NAME}.spv")
 
     add_custom_command(
@@ -67,3 +67,10 @@ endforeach()
 
 add_custom_target(CompileShaders ALL DEPENDS ${SPV_OUTPUTS})
 add_dependencies(Assignment1 CompileShaders)
+
+add_custom_command(TARGET Assignment1 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${SPV_OUTPUT_DIR}"
+    "$<TARGET_FILE_DIR:Assignment1>/shader"
+    COMMENT "Copying compiled shaders to executable directory..."
+)
