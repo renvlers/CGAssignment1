@@ -1,4 +1,6 @@
 #include "Window.hpp"
+#include "../polynomial/Polynomial.hpp"
+#include "../polynomial/PolynomialDrawer.hpp"
 #include "../vulkan/CommandBuffer.hpp"
 #include "../vulkan/CommandPool.hpp"
 #include "../vulkan/Fence.hpp"
@@ -7,6 +9,7 @@
 #include "../vulkan/VulkanBase.hpp"
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <vector>
 #include <vulkan/vk_enum_string_helper.h>
 
 Window::Window(uint32_t width, uint32_t height, const char* title, bool resizable, bool limitFrameRate) : width(width), height(height), title(title), resizable(resizable), limitFrameRate(limitFrameRate), window(nullptr) {}
@@ -81,7 +84,9 @@ void Window::show() {
         return;
     }
 
-    const auto& [renderPass, framebuffers] = createRpwfScreen();
+    const auto& [renderPass, framebuffers] = getRpwf();
+    createLayout();
+    createPipeline();
 
     Fence fence(VK_FENCE_CREATE_SIGNALED_BIT);
     Semaphore imageAvailableSemaphore;
@@ -92,8 +97,53 @@ void Window::show() {
     commandPool.allocateCommandBuffers(commandBuffer);
 
     VkClearValue clearColor = {
-        .color = {{1.0f, 0.0f, 0.0f, 1.0f}},
+        .color = {{1.0f, 1.0f, 1.0f, 1.0f}},
     };
+
+    Polynomial polynomial({2, -3, 1}); // Example polynomial: f(x) = 2x^2 - 3x + 1
+    PolynomialDrawer drawer(std::move(polynomial), -10, 10);
+
+    std::vector<Vertex> vertices = drawer.draw();
+
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = sizeof(Vertex) * vertices.size();
+    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    VkBuffer vertexBuffer;
+    vkCreateBuffer(vulkanBase.getDevice(), &bufferInfo, nullptr, &vertexBuffer);
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(vulkanBase.getDevice(), vertexBuffer, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(vulkanBase.getCurrentPhysicalDevice(), &memProperties);
+
+    uint32_t memoryTypeIndex = 0;
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        if ((memRequirements.memoryTypeBits & (1 << i)) &&
+            (memProperties.memoryTypes[i].propertyFlags & (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) == (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+            memoryTypeIndex = i;
+            break;
+        }
+    }
+    allocInfo.memoryTypeIndex = memoryTypeIndex;
+
+    VkDeviceMemory vertexBufferMemory;
+    vkAllocateMemory(vulkanBase.getDevice(), &allocInfo, nullptr, &vertexBufferMemory);
+    vkBindBufferMemory(vulkanBase.getDevice(), vertexBuffer, vertexBufferMemory, 0);
+
+    void* data;
+    vkMapMemory(vulkanBase.getDevice(), vertexBufferMemory, 0, bufferInfo.size, 0, &data);
+    memcpy(data, vertices.data(), bufferInfo.size);
+    vkUnmapMemory(vulkanBase.getDevice(), vertexBufferMemory);
+
+    VkBuffer vertexBuffers[]{vertexBuffer};
+    VkDeviceSize offsets[]{0};
 
     while (!glfwWindowShouldClose(this->window)) {
         while (glfwGetWindowAttrib(window, GLFW_ICONIFIED)) {
@@ -105,7 +155,11 @@ void Window::show() {
 
         commandBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
         renderPass.cmdBegin(commandBuffer, framebuffers[i], {{}, vulkanBase.getSwapchainCreateInfo().imageExtent}, clearColor);
-        // TODO: Record rendering commands into the command buffer here.
+
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+        vkCmdDraw(commandBuffer, vertices.size(), 1, 0, 0);
+
         renderPass.cmdEnd(commandBuffer);
         commandBuffer.end();
 

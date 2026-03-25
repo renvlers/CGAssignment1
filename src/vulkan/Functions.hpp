@@ -3,10 +3,15 @@
 #ifndef _FUNCTIONS_HPP_
 #define _FUNCTIONS_HPP_
 
+#include "Pipeline.hpp"
+#include "PipelineLayout.hpp"
 #include "RenderPass.hpp"
 #include "RenderPassWithFrameBuffers.hpp"
 #include "VulkanBase.hpp"
 #include <vulkan/vulkan.h>
+
+extern PipelineLayout pipelineLayout;
+extern Pipeline pipeline;
 
 inline const auto& createRpwfScreen() {
     static RenderPassWithFramebuffers rpwf;
@@ -98,5 +103,13 @@ inline const auto& createRpwfScreen() {
 
     return rpwf;
 }
+
+inline const auto& getRpwf() {
+    static const auto& rpwf = createRpwfScreen();
+    return rpwf;
+}
+
+void createLayout();
+void createPipeline();
 
 #endif // _FUNCTIONS_HPP_

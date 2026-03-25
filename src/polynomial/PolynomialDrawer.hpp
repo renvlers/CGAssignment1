@@ -7,6 +7,8 @@
 #include "Polynomial.hpp"
 #include <glm/glm.hpp>
 
+using Vertex = glm::vec2;
+
 /**
  * @class PolynomialDrawer
  * @brief A class responsible for drawing a polynomial on a graphical interface.
@@ -43,7 +45,7 @@ public:
      *
      * This function should be implemented to render the polynomial based on the provided parameters.
      */
-    void draw();
+    std::vector<Vertex> draw();
 
     /**
      * @brief Setters of the polynomial drawing parameters.
