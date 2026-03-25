@@ -105,6 +105,14 @@ void Window::show() {
 
     std::vector<Vertex> vertices = drawer.draw();
 
+    float scaleX = 1.0f / 15.0f;
+    float scaleY = 1.0f / 250.0f;
+
+    for (auto& vertex : vertices) {
+        vertex.x *= scaleX;
+        vertex.y = -vertex.y * scaleY;
+    }
+
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = sizeof(Vertex) * vertices.size();

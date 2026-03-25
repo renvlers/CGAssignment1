@@ -35,14 +35,6 @@ std::vector<Vertex> PolynomialDrawer::draw() {
         dForward += d2;
     }
 
-    float scaleX = 1.0f / 15.0f;
-    float scaleY = 1.0f / 250.0f;
-
-    for (auto& vertex : vertices) {
-        vertex.x *= scaleX;
-        vertex.y = -vertex.y * scaleY;
-    }
-
     return std::move(vertices);
 }
 
